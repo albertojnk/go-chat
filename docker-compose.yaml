@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  redis:
+    image: "redis:alpine"
+    command: redis-server --requirepass abcd1234
+    ports:
+     - "6378:6379"
+    volumes:
+     - $PWD/redis-data:/var/lib/redis
+    environment:
+     - REDIS_REPLICATION_MODE=master
+networks:
+  main:
+    driver: bridge
+  
