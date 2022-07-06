@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="../assets/styles/styles.css" type="text/css">
+    <script>
+        var old_messages = '{{.messages}}'
+    </script>
+    <script src="../assets/js/chat.js"></script>
+    {{template "default_head.html" .}}
+</head>
+<body>
+    <div class='container'>
+        <h1>Chatbox Go-Chat</h1>
+        <div class='chatbox'>
+            <div class='chatbox__user-list' id="chatbox__user-list">
+                <h1>User list</h1>
+               
+            </div>
+            <div class="chatbox__messages" id="chatbox__messages">
+                <div class="chatbox__messages__user-message">
+                    <div class="chatbox__messages__user-message--ind-message">
+                        <p class="name">{{.messages}}</p>
+                        <br/>
+                        <p class="message">message.Content</p>
+                    </div>
+                </div>
+            </div>
+            <form>
+                <input type="text" placeholder="Enter your message">
+            </form>
+        </div>
+</body>
+</html>

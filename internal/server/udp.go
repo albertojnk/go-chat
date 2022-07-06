@@ -1,20 +1,20 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 	"strings"
 
 	_cache "github.com/albertojnk/go-chat/internal/cache"
-	"github.com/albertojnk/go-chat/internal/client"
-	"github.com/google/uuid"
+	"github.com/albertojnk/go-chat/internal/core/domains"
 )
 
 type UDPServer struct {
 	Conn     *net.UDPConn
-	Messages chan string
-	Clients  map[string]client.Client
+	Messages chan []byte
+	Clients  map[string]domains.Client
 	Config
 	cache *_cache.Redis
 }
@@ -37,11 +37,9 @@ func (s *UDPServer) NewUDP() {
 	defer conn.Close()
 
 	s.Conn = conn
-
 	log.Printf("server listening %s", s.Conn.LocalAddr().String())
-
-	s.Messages = make(chan string, 20)
-	s.Clients = make(map[string]client.Client, 0)
+	s.Messages = make(chan []byte, 20)
+	s.Clients = make(map[string]domains.Client, 0)
 
 	go s.sendMessage()
 
@@ -52,12 +50,22 @@ func (s *UDPServer) NewUDP() {
 
 func (s *UDPServer) sendMessage() {
 	for {
-		msg := <-s.Messages
+		data := <-s.Messages
+
+		msg := domains.Message{}
+		err := json.Unmarshal(data, &msg)
+		if err != nil {
+			log.Fatalf("error while decrypting message: %v, err: %v", msg, err)
+			panic(err)
+		}
+
 		for _, c := range s.Clients {
-			_, err := s.Conn.WriteToUDP([]byte(msg), c.Address)
-			if err != nil {
-				log.Fatalf("error while writing to udp: %v, err: %v", s.Conn, err)
-				panic(err)
+			if c.UserName != msg.UserName {
+				_, err := s.Conn.WriteToUDP(data, c.Address)
+				if err != nil {
+					log.Fatalf("error while writing to udp: %v, err: %v", s.Conn, err)
+					panic(err)
+				}
 			}
 		}
 	}
@@ -65,21 +73,30 @@ func (s *UDPServer) sendMessage() {
 }
 func (s *UDPServer) handleMessage() {
 	message := make([]byte, s.BufferSize)
-	rlen, remote, err := s.Conn.ReadFromUDP(message[:])
+	rlen, _, err := s.Conn.ReadFromUDP(message[0:])
 	if err != nil {
 		log.Fatalf("error while reading from udp: %v, err: %v", s.Conn, err)
 		panic(err)
 	}
 
-	data := strings.TrimSpace(string(message[:rlen]))
-	if data == "connected" {
-		s.Clients[remote.String()] = client.Client{
-			ID:      uuid.New(),
-			Name:    fmt.Sprintf("%v", remote.Port),
-			Address: remote,
-		}
-	} else {
-		s.Messages <- data
-		fmt.Printf("received: %s from %s\n", data, remote)
+	data := strings.TrimSpace(string(message[0:rlen]))
+	fmt.Println(data)
+	msg := domains.Message{}
+	err = json.Unmarshal([]byte(data), &msg)
+	if err != nil {
+		log.Fatalf("error while decrypting message: %v, err: %v", msg, err)
+		panic(err)
 	}
+
+	switch msg.MessageType {
+	case domains.HANDSHAKE:
+		s.Clients[msg.UserName] = domains.Client{
+			UserName: msg.UserName,
+			Address:  msg.Address,
+		}
+	case domains.MESSAGE:
+		s.Messages <- message[:rlen]
+		fmt.Printf("[%v] %s: %s \n", msg.Time.Format("15:04:05"), msg.UserName, msg.Content)
+	}
+
 }
