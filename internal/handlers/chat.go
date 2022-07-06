@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"strings"
@@ -24,9 +23,25 @@ func (h *NETHandler) ChatWSHandler(ctx *context.Context, c *gin.Context) error {
 		common.HandleError(err, "upgrader.Upgrade")
 		return err
 	}
-	defer ws.Close()
 
-	client := &Client{}
+	client := &Client{
+		cache: h.cache,
+	}
+
+	defer func(c *Client) {
+		msg := domains.Message{
+			UserName:    c.UserName,
+			MessageType: domains.GOODBYE,
+			Time:        time.Now(),
+		}
+
+		msgByte, err := json.Marshal(msg)
+		common.HandleError(err, "ChatWSHandler defer json.Marshal")
+
+		sendToClient(c, msgByte)
+		ws.Close()
+	}(client)
+
 	go client.NewUDP()
 	for {
 		//Read Message from client
@@ -36,7 +51,6 @@ func (h *NETHandler) ChatWSHandler(ctx *context.Context, c *gin.Context) error {
 			return err
 		}
 
-		fmt.Println(string(message))
 		sendToClient(client, message)
 
 		//Response message to client
@@ -124,13 +138,13 @@ func (c *Client) handleMessage() {
 	}
 
 	data := strings.TrimSpace(string(message[0:rlen]))
-	fmt.Println("message: " + data)
 	msg := domains.Message{}
 	err = json.Unmarshal([]byte(data), &msg)
 	if err != nil {
 		common.HandleError(err, "handleMessage json.Unmarshal")
 	}
 
+	c.UserName = msg.UserName
 	msg.Time = time.Now()
 	msg.ID = common.GenerateUUID()
 	msgByte, err := json.Marshal(msg)
@@ -139,4 +153,8 @@ func (c *Client) handleMessage() {
 	}
 
 	c.Messages <- msgByte
+}
+
+func (c *Client) Close() {
+	c.Conn.Close()
 }

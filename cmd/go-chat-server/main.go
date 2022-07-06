@@ -31,6 +31,7 @@ func main() {
 			Address:    common.GetEnv("UDP_LISTENING_ADDRESS", "0.0.0.0"),
 			BufferSize: 2048,
 		},
+		Cache: cache,
 	}
 	s.NewUDP()
 }

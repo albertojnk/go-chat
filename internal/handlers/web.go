@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func LoginHandler(ctx *context.Context, c *gin.Context) error {
+func (h *NETHandler) LoginHandler(ctx *context.Context, c *gin.Context) error {
 
 	body := gin.H{}
 
@@ -17,7 +17,7 @@ func LoginHandler(ctx *context.Context, c *gin.Context) error {
 	return nil
 }
 
-func ChatHandler(ctx *context.Context, c *gin.Context) error {
+func (h *NETHandler) ChatHandler(ctx *context.Context, c *gin.Context) error {
 
 	body := gin.H{}
 

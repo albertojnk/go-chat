@@ -15,8 +15,8 @@ type UDPServer struct {
 	Conn     *net.UDPConn
 	Messages chan []byte
 	Clients  map[string]domains.Client
+	Cache    *_cache.Redis
 	Config
-	cache *_cache.Redis
 }
 
 type Config struct {
@@ -69,8 +69,8 @@ func (s *UDPServer) sendMessage() {
 			}
 		}
 	}
-
 }
+
 func (s *UDPServer) handleMessage() {
 	message := make([]byte, s.BufferSize)
 	rlen, _, err := s.Conn.ReadFromUDP(message[0:])
@@ -97,6 +97,9 @@ func (s *UDPServer) handleMessage() {
 	case domains.MESSAGE:
 		s.Messages <- message[:rlen]
 		fmt.Printf("[%v] %s: %s \n", msg.Time.Format("15:04:05"), msg.UserName, msg.Content)
-	}
+	case domains.DELETEMESSAGE:
 
+	case domains.GOODBYE:
+
+	}
 }
