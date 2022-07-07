@@ -8,7 +8,6 @@ import (
 
 type Client struct {
 	UserName string
-	Messages chan []byte
 	Address  *net.UDPAddr
 	Conn     *net.UDPConn
 	cache    *cache.Redis

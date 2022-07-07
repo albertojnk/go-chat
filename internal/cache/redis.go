@@ -65,3 +65,7 @@ func (cache *Redis) ExpireKey(key string) error {
 func (cache *Redis) GetInstance() *redis.Client {
 	return cache.Client
 }
+
+func (cache *Redis) DeleteKeys(keys ...string) error {
+	return cache.Del(keys...).Err()
+}

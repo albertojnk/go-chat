@@ -17,7 +17,7 @@ func GetEnv(key, defaultValue string) string {
 
 func HandleError(err error, funcName string) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error:%s-----in func:%s", err.Error(), funcName)
+		fmt.Fprintf(os.Stderr, "error: %s ----- in func: %s", err.Error(), funcName)
 	}
 }
 

@@ -3,19 +3,32 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net"
 	"strings"
 	"time"
 
 	"github.com/albertojnk/go-chat/common"
-	"github.com/albertojnk/go-chat/internal/cache"
 	"github.com/albertojnk/go-chat/internal/core/domains"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{}
+
+type Client struct {
+	UserName string
+	Messages chan domains.Message
+	Address  *net.UDPAddr
+	Conn     *net.UDPConn
+	WS       *websocket.Conn
+	Config
+}
+
+type Config struct {
+	Port       int
+	Address    string
+	BufferSize int
+}
 
 func (h *NETHandler) ChatWSHandler(ctx *context.Context, c *gin.Context) error {
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -25,7 +38,10 @@ func (h *NETHandler) ChatWSHandler(ctx *context.Context, c *gin.Context) error {
 	}
 
 	client := &Client{
-		cache: h.cache,
+		WS: ws,
+		Config: Config{
+			BufferSize: 2048,
+		},
 	}
 
 	defer func(c *Client) {
@@ -43,44 +59,18 @@ func (h *NETHandler) ChatWSHandler(ctx *context.Context, c *gin.Context) error {
 	}(client)
 
 	go client.NewUDP()
+
 	for {
-		//Read Message from client
-		mt, message, err := ws.ReadMessage()
+		//Read Message from web
+		_, message, err := ws.ReadMessage()
 		if err != nil {
 			common.HandleError(err, "ws.ReadMessage")
 			return err
 		}
 
 		sendToClient(client, message)
-
-		//Response message to client
-		err = ws.WriteMessage(mt, message)
-		if err != nil {
-			common.HandleError(err, "ws.WriteMessage")
-			return err
-		}
 	}
-}
 
-func sendToClient(c *Client, msg []byte) {
-	_, err := c.Conn.Write(msg)
-	common.HandleError(err, "sendToClient")
-
-}
-
-type Client struct {
-	UserName string
-	Messages chan []byte
-	Address  *net.UDPAddr
-	Conn     *net.UDPConn
-	cache    *cache.Redis
-	Config
-}
-
-type Config struct {
-	Port       int
-	Address    string
-	BufferSize int
 }
 
 func (c *Client) NewUDP() error {
@@ -105,54 +95,57 @@ func (c *Client) NewUDP() error {
 	}
 
 	c.Conn = conn
-	c.Messages = make(chan []byte, 20)
+	c.Messages = make(chan domains.Message, 20)
 	c.Address = conAddr
 
-	go c.sendMessage()
+	go c.sendMessageToWeb()
 
 	for {
 		c.handleMessage()
 	}
 }
 
-func (c *Client) sendMessage() {
+func (c *Client) sendMessageToWeb() {
 	for {
 		msg := <-c.Messages
 
-		message := domains.Message{}
-		err := json.Unmarshal(msg, &message)
-		if err != nil {
-			common.HandleError(err, "sendMessage Unmarshal")
-		}
-
-		// send to server
-		log.Printf("\n[%v] %s: %s", message.Time.Format("15:04:05"), message.UserName, message.Content)
+		err := c.WS.WriteJSON(msg)
+		common.HandleError(err, "sendMessage ws.WriteMessage")
 	}
 }
 
 func (c *Client) handleMessage() {
 	message := make([]byte, c.BufferSize)
 	rlen, err := c.Conn.Read(message[0:])
-	if err != nil {
-		common.HandleError(err, "handleMessage c.Conn.Read")
-	}
+	common.HandleError(err, "handleMessage c.Conn.Read")
 
 	data := strings.TrimSpace(string(message[0:rlen]))
+
 	msg := domains.Message{}
 	err = json.Unmarshal([]byte(data), &msg)
-	if err != nil {
-		common.HandleError(err, "handleMessage json.Unmarshal")
-	}
+	common.HandleError(err, "handleMessage json.Unmarshal")
 
 	c.UserName = msg.UserName
 	msg.Time = time.Now()
 	msg.ID = common.GenerateUUID()
-	msgByte, err := json.Marshal(msg)
-	if err != nil {
-		common.HandleError(err, "handleMessage json.Marshal")
-	}
 
-	c.Messages <- msgByte
+	c.Messages <- msg
+}
+
+func sendToClient(c *Client, data []byte) {
+	msg := domains.Message{}
+	err := json.Unmarshal(data, &msg)
+	common.HandleError(err, "handleMessage json.Unmarshal")
+
+	c.UserName = msg.UserName
+	msg.Address = c.Address
+	msg.Time = time.Now()
+	msg.ID = common.GenerateUUID()
+	msgByte, err := json.Marshal(msg)
+	common.HandleError(err, "handleMessage json.Marshal")
+
+	_, err = c.Conn.Write(msgByte)
+	common.HandleError(err, "sendMessage")
 }
 
 func (c *Client) Close() {

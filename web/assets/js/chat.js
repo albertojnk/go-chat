@@ -17,6 +17,16 @@ window.addEventListener("load", function (evt) {
         socket.close()
         removeUser(username)
     })
+
+    document.getElementById("msg-form").addEventListener('submit', function(event) {
+
+        var msg_content = document.getElementById("msg-input").value
+        msg = JSON.stringify(Message(username, msg_content, "MESSAGE"))
+        socket.send(msg)
+        
+        document.getElementById("msg-input").value = ''
+        event.preventDefault();
+    })
     
     function Message(username, message, message_type) {
         return {
@@ -57,8 +67,7 @@ window.addEventListener("load", function (evt) {
     }
     
     function removeMessage(id) {
-        var ele = document.getElementById(id)
-        ele.remove()
+        document.getElementById(id).remove()
     }
 
     function processMessage(msg) {
