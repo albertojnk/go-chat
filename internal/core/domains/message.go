@@ -18,10 +18,9 @@ type Message struct {
 type MessageType string
 
 const (
-	HANDSHAKE     MessageType = "HANDSHAKE"
-	GOODBYE       MessageType = "GOODBYE"
-	MESSAGE       MessageType = "MESSAGE"
-	DELETEMESSAGE MessageType = "DELETEMESSAGE"
-	ALLUSERS      MessageType = "ALLUSERS"
-	ALLMESSAGES   MessageType = "ALLMESSAGES"
+	HANDSHAKE      MessageType = "HANDSHAKE"
+	GOODBYE        MessageType = "GOODBYE"
+	MESSAGE        MessageType = "MESSAGE"
+	DELETEMESSAGE  MessageType = "DELETEMESSAGE"
+	INVALIDMESSAGE MessageType = "INVALIDMESSAGE"
 )

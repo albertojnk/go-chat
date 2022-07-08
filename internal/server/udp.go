@@ -99,6 +99,8 @@ func (s *UDPServer) handleMessage() {
 		users[msg.UserName] = client
 		msg.Clients = users
 
+		msg.Content = "handshake from server"
+
 		bUsers, err := json.Marshal(users)
 		common.HandleError(err, "MESSAGE Marshal")
 
@@ -106,7 +108,25 @@ func (s *UDPServer) handleMessage() {
 		common.HandleError(err, "HANDSHAKE s.Cache.SetValue")
 
 	case domains.MESSAGE:
-		// add message to redis
+
+		users, err := s.getUsers()
+		if err != redis.Nil {
+			common.HandleError(err, "MESSAGE s.Cache.GetUsers")
+		}
+
+		if _, ok := users[msg.UserName]; !ok {
+			newmsg := domains.Message{
+				Content:     "invalid message",
+				MessageType: domains.INVALIDMESSAGE,
+				UserName:    msg.UserName,
+			}
+
+			msgbyte, err := json.Marshal(newmsg)
+			common.HandleError(err, "MESSAGE json.Marshal(newmsg)")
+			s.Messages <- msgbyte
+			return
+		}
+
 		msgs, err := s.getMessages()
 		if err != redis.Nil {
 			common.HandleError(err, "MESSAGE s.getMessages")
@@ -126,15 +146,40 @@ func (s *UDPServer) handleMessage() {
 		common.HandleError(err, "MESSAGE s.Cache.SetValue")
 
 	case domains.DELETEMESSAGE:
-		// delete message from redis
-		msgs, err := s.deleteMessage(msg.ID)
-		common.HandleError(err, "DELETEMESSAGE s.deleteMessage")
 
-		bMsgs, err := json.Marshal(msgs)
-		common.HandleError(err, "DELETEMESSAGE Marshal")
+		msgs, err := s.getMessages()
+		if err != redis.Nil {
+			common.HandleError(err, "MESSAGE s.getMessages")
+		}
 
-		err = s.Cache.SetValue(domains.MESSAGESKEY, string(bMsgs), domains.CACHEDURATION)
-		common.HandleError(err, "DELETEMESSAGE s.Cache.SetValue")
+		canDelete := false
+		for _, m := range msgs {
+			if m.ID == msg.ID && m.UserName == msg.UserName {
+				canDelete = true
+			}
+		}
+
+		if canDelete {
+			msgs, err = s.deleteMessage(msg.ID)
+			common.HandleError(err, "DELETEMESSAGE s.deleteMessage")
+
+			bMsgs, err := json.Marshal(msgs)
+			common.HandleError(err, "DELETEMESSAGE Marshal")
+
+			err = s.Cache.SetValue(domains.MESSAGESKEY, string(bMsgs), domains.CACHEDURATION)
+			common.HandleError(err, "DELETEMESSAGE s.Cache.SetValue")
+		} else {
+			newmsg := domains.Message{
+				Content:     "invalid message",
+				MessageType: domains.INVALIDMESSAGE,
+				UserName:    msg.UserName,
+			}
+
+			msgbyte, err := json.Marshal(newmsg)
+			common.HandleError(err, "DELETEMESSAGE json.Marshal(newmsg)")
+			s.Messages <- msgbyte
+			return
+		}
 
 	case domains.GOODBYE:
 		users, err := s.deleteUser(msg.UserName)

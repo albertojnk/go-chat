@@ -145,9 +145,7 @@ window.addEventListener("load", function (evt) {
     }
 
     function removeUser(username) {
-        if (canPerform) {
-            document.getElementById(username).remove()
-        }
+        document.getElementById(username).remove()
     }
     
     function removeMessage(message) {

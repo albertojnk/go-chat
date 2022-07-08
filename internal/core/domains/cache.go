@@ -5,5 +5,5 @@ import "time"
 const (
 	USERSKEY      = "users"
 	MESSAGESKEY   = "messages"
-	CACHEDURATION = 24 * time.Hour
+	CACHEDURATION = 1 * time.Hour
 )
