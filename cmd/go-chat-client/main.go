@@ -23,8 +23,8 @@ func main() {
 	ctx := context.Background()
 	router := gin.New()
 
-	router.Static("/assets", "../../web/assets")
-	router.LoadHTMLGlob("../../web/pages/*")
+	router.Static("/assets", common.GetEnv("WEB_ASSETS", "../../web/assets"))
+	router.LoadHTMLGlob(common.GetEnv("WEB_PAGES", "../../web/pages/*"))
 
 	hdl := handlers.NewNETHandler(cache)
 

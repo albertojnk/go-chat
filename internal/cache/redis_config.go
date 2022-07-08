@@ -1,6 +1,8 @@
 package cache
 
-import "github.com/albertojnk/go-chat/common"
+import (
+	"github.com/albertojnk/go-chat/common"
+)
 
 // RedisConfig contains the configurations for cache.
 type RedisConfig struct {
@@ -17,7 +19,7 @@ func NewRedisConfig() *RedisConfig {
 	}
 
 	config := &RedisConfig{
-		Addr:     common.GetEnv("REDIS_HOST", "localhost:6378"),
+		Addr:     common.GetEnv("REDIS_HOST", "redis:6378"),
 		Password: password,
 	}
 

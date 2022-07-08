@@ -135,6 +135,7 @@ window.addEventListener("load", function (evt) {
                         <p class="name">`+ message.username +`</p>
                         <br/>
                         <p class="message">` + message.content + `</p>
+                        <img style="width:25px;height:25px;visibility:hidden;"></img>
                     </div>
                 `
                 msgBox.appendChild(new_message)
@@ -156,7 +157,6 @@ window.addEventListener("load", function (evt) {
 
     function processMessage(msg) {
         message = JSON.parse(msg)
-        console.log(message);
         switch (message.message_type) {
             case "GOODBYE":
                 removeUser(message.username)

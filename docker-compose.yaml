@@ -5,11 +5,45 @@ services:
     image: "redis:alpine"
     command: redis-server --requirepass abcd1234
     ports:
-     - "6378:6379"
+     - "6379:6379"
     volumes:
      - $PWD/redis-data:/var/lib/redis
     environment:
      - REDIS_REPLICATION_MODE=master
+    networks:
+      - main
+  client:
+    build: 
+      context: .
+      dockerfile: ./scripts/client.Dockerfile
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis:redis
+      REDIS_PASSWORD: abcd1234
+      WEB_ASSETS: ./web/assets
+      WEB_PAGES: ./web/pages/*
+      UDP_SERVER_CONN_ADDR: server:3000
+    restart: always
+    ports:
+     - "9000:9000"
+    networks:
+      - main
+  server:
+    build: 
+      context: .
+      dockerfile: ./scripts/server.Dockerfile
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis:redis
+      REDIS_PASSWORD: abcd1234
+    restart: always
+    ports:
+     - "3000:3000"
+    networks:
+      - main
+
 networks:
   main:
     driver: bridge
