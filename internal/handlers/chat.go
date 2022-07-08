@@ -49,12 +49,13 @@ func (h *NETHandler) ChatWSHandler(ctx *context.Context, c *gin.Context) error {
 			UserName:    c.UserName,
 			MessageType: domains.GOODBYE,
 			Time:        time.Now(),
+			Address:     c.Address,
 		}
 
 		msgByte, err := json.Marshal(msg)
 		common.HandleError(err, "ChatWSHandler defer json.Marshal")
 
-		sendToClient(c, msgByte)
+		sendToServer(c, msgByte)
 		ws.Close()
 	}(client)
 
@@ -68,13 +69,13 @@ func (h *NETHandler) ChatWSHandler(ctx *context.Context, c *gin.Context) error {
 			return err
 		}
 
-		sendToClient(client, message)
+		sendToServer(client, message)
 	}
 
 }
 
 func (c *Client) NewUDP() error {
-	broadcast, err := net.ResolveUDPAddr("udp", "0.0.0.0:3000")
+	broadcast, err := net.ResolveUDPAddr("udp", common.GetEnv("UDP_SERVER_CONN_ADDR", "0.0.0.0:3000"))
 	if err != nil {
 		common.HandleError(err, "NewUDP() net.ResolveUDPAddr")
 		return err
@@ -127,12 +128,11 @@ func (c *Client) handleMessage() {
 
 	c.UserName = msg.UserName
 	msg.Time = time.Now()
-	msg.ID = common.GenerateUUID()
 
 	c.Messages <- msg
 }
 
-func sendToClient(c *Client, data []byte) {
+func sendToServer(c *Client, data []byte) {
 	msg := domains.Message{}
 	err := json.Unmarshal(data, &msg)
 	common.HandleError(err, "handleMessage json.Unmarshal")
@@ -140,7 +140,9 @@ func sendToClient(c *Client, data []byte) {
 	c.UserName = msg.UserName
 	msg.Address = c.Address
 	msg.Time = time.Now()
-	msg.ID = common.GenerateUUID()
+	if msg.MessageType != domains.DELETEMESSAGE {
+		msg.ID = common.GenerateUUID()
+	}
 	msgByte, err := json.Marshal(msg)
 	common.HandleError(err, "handleMessage json.Marshal")
 

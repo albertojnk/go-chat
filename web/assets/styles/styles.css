@@ -29,52 +29,73 @@ html, body {
   position: relative;
   box-shadow: 1px 1px 12px rgba(0, 0, 0, 0.1);
 }
-.chatbox__messages:nth-of-type(odd) .chatbox__messages__user-message--ind-message {
-  float: right;
-}
-.chatbox__messages:nth-of-type(odd) .chatbox__messages__user-message--ind-message:after {
-  content: '';
-  position: absolute;
-  margin: -1.5em -17.06em;
-  width: 0;
-  height: 0;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  border-right: 10px solid rgba(255, 255, 255, 0.2);
-}
-.chatbox__messages:nth-of-type(even) .chatbox__messages__user-message--ind-message {
+.chatbox__messages__user-message--ind-message {
   float: left;
 }
-.chatbox__messages:nth-of-type(even) .chatbox__messages__user-message--ind-message:after {
-  content: '';
-  position: absolute;
-  margin: -1.5em 1.87em;
-  width: 0;
-  height: 0;
-  border-top: 10px solid transparent;
-  border-bottom: 10px solid transparent;
-  border-left: 10px solid rgba(255, 255, 255, 0.2);
-}
+
 .chatbox__messages__user-message {
   width: 450px;
 }
+
+.head {
+  display: flex;
+  width: 600px;
+  align-items: center;
+}
+
+.head button {
+  border-radius: 5px;
+  width: 120px;
+  height: 50px;
+}
+
 .chatbox__messages__user-message--ind-message {
   background: rgba(255, 255, 255, 0.2);
   padding: 1em 0;
   height: auto;
   width: 65%;
   border-radius: 5px;
-  margin: 2em 1em;
+  margin: 1em 1em;
   overflow: auto;
+  display: grid;
 }
+
+.chatbox__messages__user-message--ind-message p {
+  width: 65%;
+}
+
+.chatbox__messages__user-message--ind-message img {
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  border-radius: 1em;
+  grid-column-start: 2;
+  grid-column-end: 2;
+  grid-row-start: 1;
+  grid-row-end: 1;
+}
+
+.chatbox__messages__user-message--ind-message img:hover {
+  background-color: #39a7a5;
+}
+
 .chatbox__messages__user-message--ind-message > p.name {
-  color: #FFF;
+  color: rgb(255, 255, 255);
   font-size: 1em;
+  grid-column-start: 1;
+  grid-column-end: 1;
+  grid-row-start: 1;
+  grid-row-end: 1;
 }
 .chatbox__messages__user-message--ind-message > p.message {
-  color: #FFF;
+  color: rgb(255, 255, 255);
   font-size: 0.7em;
   margin: 0 2.8em;
+  overflow-wrap: break-word;
+  grid-column-start: 1;
+  grid-column-end: 1;
+  grid-row-start: 2;
+  grid-row-end: 2;
 }
 .chatbox__user-list {
   background: rgba(255, 255, 255, 0.1);
@@ -143,4 +164,10 @@ html, body {
 }
 :-ms-input-placeholder {
   color: rgba(255, 255, 255, 0.9);
+}
+
+.chatbox__container{
+  overflow-x: hidden;
+  overflow-y: scroll;
+  max-height: 93%;
 }

@@ -12,6 +12,7 @@ type Message struct {
 	Time        time.Time    `json:"time"`
 	Address     *net.UDPAddr `json:"address"`
 	MessageType `json:"message_type"`
+	Clients     map[string]Client `json:"clients"`
 }
 
 type MessageType string
@@ -21,4 +22,6 @@ const (
 	GOODBYE       MessageType = "GOODBYE"
 	MESSAGE       MessageType = "MESSAGE"
 	DELETEMESSAGE MessageType = "DELETEMESSAGE"
+	ALLUSERS      MessageType = "ALLUSERS"
+	ALLMESSAGES   MessageType = "ALLMESSAGES"
 )

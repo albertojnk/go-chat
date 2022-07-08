@@ -56,37 +56,32 @@ func (s *UDPServer) sendMessage() {
 
 		msg := domains.Message{}
 		err := json.Unmarshal(data, &msg)
-		if err != nil {
-			log.Fatalf("error while decrypting message: %v, err: %v", msg, err)
-			panic(err)
+		common.HandleError(err, "sendMessage json.Unmarshal")
+
+		clientToDelete := ""
+		for _, c := range s.Clients {
+			if c.UserName == msg.UserName && msg.MessageType == domains.GOODBYE {
+				clientToDelete = msg.UserName
+			}
+
+			_, err := s.Conn.WriteToUDP(data, c.Address)
+			common.HandleError(err, "sendMessage s.Conn.WriteToUDP")
 		}
 
-		for _, c := range s.Clients {
-			_, err := s.Conn.WriteToUDP(data, c.Address)
-			if err != nil {
-				err := s.Cache.DeleteKeys(msg.UserName)
-				common.HandleError(err, "sendMessage s.Cache.DeleteKeys")
-			}
-		}
+		delete(s.Clients, clientToDelete)
 	}
 }
 
 func (s *UDPServer) handleMessage() {
 	message := make([]byte, s.BufferSize)
 	rlen, _, err := s.Conn.ReadFromUDP(message[0:])
-	if err != nil {
-		log.Fatalf("error while reading from udp: %v, err: %v", s.Conn, err)
-		panic(err)
-	}
+	common.HandleError(err, "handleMessage ReadFromUDP")
 
 	data := strings.TrimSpace(string(message[:rlen]))
-	fmt.Println(data)
+
 	msg := domains.Message{}
 	err = json.Unmarshal([]byte(data), &msg)
-	if err != nil {
-		log.Fatalf("error while decrypting message: %v, err: %v", msg, err)
-		panic(err)
-	}
+	common.HandleError(err, "handleMessage Unmarshal")
 
 	switch msg.MessageType {
 	case domains.HANDSHAKE:
@@ -102,6 +97,7 @@ func (s *UDPServer) handleMessage() {
 
 		s.Clients[msg.UserName] = client
 		users[msg.UserName] = client
+		msg.Clients = users
 
 		bUsers, err := json.Marshal(users)
 		common.HandleError(err, "MESSAGE Marshal")
@@ -118,6 +114,8 @@ func (s *UDPServer) handleMessage() {
 
 		if len(msgs) == 20 {
 			msgs = msgs[1:]
+			msgs = append(msgs, msg)
+		} else {
 			msgs = append(msgs, msg)
 		}
 
@@ -146,26 +144,25 @@ func (s *UDPServer) handleMessage() {
 
 		msg.Address = nil
 
-		bUsers, err := json.Marshal(users)
-		common.HandleError(err, "GOODBYE Marshal")
+		if len(users) == 0 {
+			err = s.Cache.FlushData()
+			common.HandleError(err, "GOODBYE s.Cache.FlushData")
+		} else {
 
-		err = s.Cache.SetValue(domains.MESSAGESKEY, string(bUsers), domains.CACHEDURATION)
-		common.HandleError(err, "GOODBYE s.Cache.SetValue")
+			bUsers, err := json.Marshal(users)
+			common.HandleError(err, "GOODBYE Marshal")
 
-		delete(s.Clients, msg.UserName)
+			err = s.Cache.SetValue(domains.USERSKEY, string(bUsers), domains.CACHEDURATION)
+			common.HandleError(err, "GOODBYE s.Cache.SetValue")
+
+		}
 	}
 
-	s.Messages <- message[:rlen]
-}
+	msgbyte, err := json.Marshal(msg)
+	common.HandleError(err, "handleMessage json.Marshal(msg)")
+	fmt.Println(data)
 
-func (s *UDPServer) populateFromRedis() {
-
-	// messages
-	{
-	}
-	// users
-	{
-	}
+	s.Messages <- msgbyte
 }
 
 func (s *UDPServer) getUsers() (map[string]domains.Client, error) {

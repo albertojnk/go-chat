@@ -7,11 +7,11 @@ import (
 )
 
 type Client struct {
-	UserName string
-	Address  *net.UDPAddr
-	Conn     *net.UDPConn
-	cache    *cache.Redis
-	Config
+	UserName string       `json:"username"`
+	Address  *net.UDPAddr `json:"-"`
+	Conn     *net.UDPConn `json:"-"`
+	cache    *cache.Redis `json:"-"`
+	Config   `json:"-"`
 }
 
 type Config struct {

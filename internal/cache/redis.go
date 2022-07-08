@@ -34,6 +34,10 @@ func NewRedis(config *RedisConfig) (*Redis, error) {
 	return &Redis{rdb}, nil
 }
 
+func (cache *Redis) FlushData() error {
+	return cache.FlushDB().Err()
+}
+
 //SetValue run sql query
 func (cache *Redis) SetValue(key string, value interface{}, expiration time.Duration) error {
 	err := cache.Set(key, value, expiration).Err()

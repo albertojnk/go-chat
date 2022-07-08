@@ -9,25 +9,23 @@
     <link rel="stylesheet" href="../assets/styles/styles.css" type="text/css">
     <script>
         var old_messages = '{{.messages}}'
+        var connected_users = '{{.users}}'
     </script>
     <script src="../assets/js/chat.js"></script>
     {{template "default_head.html" .}}
 </head>
 <body>
     <div class='container'>
-        <h1>Chatbox Go-Chat</h1>
+        <div class="head">
+            <h1>Chatbox Go-Chat</h1>
+            <button id="disconnect-btn">disconnect</button>
+            <button id="connect-btn" style="display:none">connect</button>
+        </div>
         <div class='chatbox'>
             <div class='chatbox__user-list' id="chatbox__user-list">
                 <h1>User list</h1>
             </div>
-            <div class="chatbox__messages" id="chatbox__messages">
-                <div class="chatbox__messages__user-message">
-                    <div class="chatbox__messages__user-message--ind-message">
-                        <p class="name">{{.messages}}</p>
-                        <br/>
-                        <p class="message">message.Content</p>
-                    </div>
-                </div>
+            <div class="chatbox__messages chatbox__container" id="chatbox__messages">
             </div>
             <form id="msg-form">
                 <input id="msg-input" type="text" placeholder="Enter your message">
