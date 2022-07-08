@@ -18,6 +18,26 @@
 
 ---
 
+## How It Works
+
+There are 3 essencial parts of this project: 
+* Web Client (front-end)
+* Web Server/UDP Client (back-end)
+* UDP Server (back-end)
+
+## Flow
+
+>When a user perform an action in the Web Client, the Web Client send a message to Web Server;
+<br>
+>Web Server reads the message, translate and send it to UDP Server;
+<br>
+>UDP Server reads the message, perform the action and sends the message to all UDP Client (users);
+<br>
+>UDP Client reads the message, translate and send it back to Web Client;
+<br>
+>Web Client reads the message and perform the action;
+
+---
 ## How To Use
 
 To clone and run this application, you'll need [Git](https://git-scm.com) and [Docker](https://docs.docker.com/engine/install/) installed on your computer. From your command line:
