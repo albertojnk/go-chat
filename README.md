@@ -1,7 +1,7 @@
 # go-chat
-go-chat is a golang udp server/udp client/web application 
 
 <p align="center">
+    go-chat is a golang udp server/udp client/web application 
   
 <img src="./example.PNG" alt="example">
   
@@ -39,7 +39,7 @@ $ docker-compose up
 After docker compose is up and running, go to your browser at [localhost:9000](http://localhost:9000/), insert your username and connect.
 
 > **Note**
-> If you want to test features, login with a different username and from a different browser, otherwise the program does not work properly.
+> If you want to test features, on your second+ login use a different username and a different browser, otherwise the program does not work properly.
 
 ---
 
