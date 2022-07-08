@@ -56,7 +56,7 @@ $ cd go-chat
 $ docker-compose up
 ```
 
-After docker compose is up and running, go to your browser at [localhost:9000](http://localhost:9000/), insert your username and connect.
+After docker compose is up and running, go to your browser at [localhost:9000](http://localhost:9000/), insert your username to connect.
 
 > **Note**
 > If you want to test features, on your second+ login use a different username and a different browser, otherwise the program does not work properly.
