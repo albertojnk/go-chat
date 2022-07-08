@@ -29,7 +29,7 @@ There are 3 essencial parts of this project:
 
 >When a user perform an action in the Web Client, the Web Client send a message to Web Server;
 <br>
->Web Server reads the message, translate and send it to UDP Server;
+>Web Server reads the message, translate and send it to Web Server;
 <br>
 >UDP Server reads the message, perform the action and sends the message to all UDP Client (users);
 <br>
